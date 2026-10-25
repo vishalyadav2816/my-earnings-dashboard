@@ -1,566 +1,401 @@
 {% extends "base.html" %}
-
-{% block title %}Pitch CRM & Calls &bull; EarnFlow{% endblock %}
+{% block title %}Pitch CRM · EarnFlow{% endblock %}
 
 {% block content %}
-<div class="dashboard-layout">
-    <!-- Top Modern Navigation Bar -->
-    <header class="dashboard-navbar">
-        <div class="nav-left">
-            <div class="app-logo">
-                <div class="logo-box">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <span class="logo-text">Earn<span class="logo-accent">Flow</span></span>
-            </div>
-            <span class="nav-divider"></span>
-            <nav class="nav-links">
-                <a href="{{ url_for('dashboard') }}" class="nav-link">
-                    <i class="fa-solid fa-chart-line"></i> Earnings
-                </a>
-                <a href="{{ url_for('pitches') }}" class="nav-link active">
-                    <i class="fa-solid fa-headset"></i> Pitch CRM & Calls
-                </a>
-            </nav>
+<div class="app-shell">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark" style="margin-bottom:0;">
+        <div class="logo-box"><i class="fa-solid fa-wallet"></i></div>
+        <div class="logo-text">Earn<span>Flow</span></div>
+      </div>
+      <div class="topbar-divider"></div>
+      <nav class="top-nav">
+        <a href="{{ url_for('dashboard') }}" class="top-nav-link">
+          <i class="fa-solid fa-chart-line"></i> Earnings
+        </a>
+        <a href="{{ url_for('pitches') }}" class="top-nav-link active">
+          <i class="fa-solid fa-headset"></i> Pitch CRM
+        </a>
+      </nav>
+    </div>
+    <div class="topbar-right">
+      <div class="currency-chip">
+        <i class="fa-solid fa-coins"></i> Currency: <strong>{{ session.get('currency','$') }}</strong>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar">{{ session.get('user_name','U')[:1]|upper }}</div>
+        <div>
+          <div class="user-name-sm">{{ session.get('user_name','User') }}</div>
+          <div class="user-role-sm">{{ session.get('user_title','Freelancer') }}</div>
         </div>
+        <a href="{{ url_for('logout') }}" class="logout-btn" title="Sign Out">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+      </div>
+    </div>
+  </header>
 
-        <div class="nav-right">
-            <div class="currency-tag">
-                <i class="fa-solid fa-coins"></i>
-                <span>Currency: <strong>{{ session.get('currency', '$') }}</strong></span>
-            </div>
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+    {% set cur = session.get('currency','$') %}
 
-            <div class="user-profile-menu">
-                <div class="user-avatar">
-                    {{ session.get('user_name', 'User')[:1] | upper }}
-                </div>
-                <div class="user-details">
-                    <span class="user-name">{{ session.get('user_name', 'User') }}</span>
-                    <span class="user-role">{{ session.get('user_title', 'Freelancer') }}</span>
-                </div>
-                <a href="{{ url_for('logout') }}" class="btn-logout" title="Sign Out">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span class="logout-text">Logout</span>
-                </a>
-            </div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fa-solid fa-headset" style="color:var(--accent)"></i> Client Pitch & Call Tracker</h1>
+        <p class="page-sub">Manage outreach, schedule discovery calls, track proposals, and convert won deals to earnings.</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openModal('lead-modal')"><i class="fa-solid fa-plus"></i> Add New Prospect</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-project">
+        <div class="kpi-head">
+          <span class="kpi-label">Active Prospects</span>
+          <div class="kpi-icon ac"><i class="fa-solid fa-users"></i></div>
         </div>
-    </header>
+        <div class="kpi-amount">{{ stats.total_leads }}</div>
+        <div class="kpi-foot"><span class="kpi-subtext">Total clients in your outreach funnel</span></div>
+      </div>
 
-    <!-- Main Container -->
-    <main class="dashboard-main">
-        <!-- Hero Header -->
-        <div class="dashboard-hero">
-            <div class="hero-text">
-                <h1 class="hero-title">
-                    <i class="fa-solid fa-headset text-primary"></i> Client Pitch & Call Tracker
-                </h1>
-                <p class="hero-subtitle">
-                    Manage client outreach, schedule discovery calls, quote fees, and convert won proposals directly into earnings.
-                </p>
-            </div>
-            <div class="hero-actions">
-                <button type="button" class="btn-primary" onclick="openLeadModal()">
-                    <i class="fa-solid fa-plus"></i> Add New Prospect Pitch
-                </button>
-            </div>
+      <div class="kpi-card kpi-total">
+        <div class="kpi-head">
+          <span class="kpi-label">Pipeline Value</span>
+          <div class="kpi-icon g"><i class="fa-solid fa-money-bill-trend-up"></i></div>
         </div>
-
-        <!-- 4 KPI Cards for Leads & Pitches -->
-        <div class="kpi-grid">
-            <!-- 1. Total Leads -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-label">Active Prospects</span>
-                    <div class="kpi-icon project-icon">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                </div>
-                <div class="kpi-amount" id="lead-kpi-total">{{ stats.total_leads }}</div>
-                <div class="kpi-footer">
-                    <span class="kpi-subtext">Total clients in your outreach funnel</span>
-                </div>
-            </div>
-
-            <!-- 2. Pipeline Value -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-label">Total Pipeline Value</span>
-                    <div class="kpi-icon freelance-icon">
-                        <i class="fa-solid fa-money-bill-trend-up"></i>
-                    </div>
-                </div>
-                <div class="kpi-amount" id="lead-kpi-pipeline">
-                    {{ session.get('currency', '$') }}{{ "{:,.2f}".format(stats.pipeline_val) }}
-                </div>
-                <div class="kpi-footer">
-                    <span class="kpi-tag positive">
-                        <i class="fa-solid fa-coins"></i> Active Deals
-                    </span>
-                    <span class="kpi-subtext">Quoted & open proposals</span>
-                </div>
-            </div>
-
-            <!-- 3. Calls Scheduled -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-label">Calls Scheduled</span>
-                    <div class="kpi-icon pending-icon">
-                        <i class="fa-solid fa-phone-volume"></i>
-                    </div>
-                </div>
-                <div class="kpi-amount" id="lead-kpi-calls">{{ stats.calls_scheduled }}</div>
-                <div class="kpi-footer">
-                    <span class="kpi-tag warning">
-                        <i class="fa-regular fa-calendar-check"></i> Discovery Calls
-                    </span>
-                    <span class="kpi-subtext">Booked calls to close</span>
-                </div>
-            </div>
-
-            <!-- 4. Won Deals -->
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-label">Won & Converted Deals</span>
-                    <div class="kpi-icon total-icon">
-                        <i class="fa-solid fa-trophy"></i>
-                    </div>
-                </div>
-                <div class="kpi-amount" id="lead-kpi-won">{{ stats.won_leads }}</div>
-                <div class="kpi-footer">
-                    <span class="kpi-tag positive">
-                        <i class="fa-solid fa-percent"></i> {{ stats.conversion_rate }}% Win Rate
-                    </span>
-                    <span class="kpi-subtext">{{ session.get('currency', '$') }}{{ "{:,.0f}".format(stats.won_val) }} won</span>
-                </div>
-            </div>
+        <div class="kpi-amount">{{ cur }}{{ "{:,.2f}".format(stats.pipeline_val) }}</div>
+        <div class="kpi-foot">
+          <span class="badge badge-green"><i class="fa-solid fa-coins"></i> Active deals</span>
         </div>
+      </div>
 
-        <!-- Ledger Table Section -->
-        <div class="table-section-card">
-            <div class="table-toolbar">
-                <div class="toolbar-left">
-                    <h2 class="section-title">
-                        <i class="fa-solid fa-address-book"></i> Client Outreach & Pitch Pipeline
-                        <span class="records-count-badge" id="leads-count">{{ leads|length }}</span>
-                    </h2>
-                    <!-- Filters -->
-                    <div class="filter-pills">
-                        <button class="pill-btn active" data-lead-filter="all" onclick="filterLeads('all', this)">All</button>
-                        <button class="pill-btn" data-lead-filter="call_scheduled" onclick="filterLeads('call_scheduled', this)">
-                            <i class="fa-solid fa-phone"></i> Calls Scheduled
-                        </button>
-                        <button class="pill-btn" data-lead-filter="proposal_sent" onclick="filterLeads('proposal_sent', this)">
-                            <i class="fa-solid fa-file-signature"></i> Proposal Sent
-                        </button>
-                        <button class="pill-btn" data-lead-filter="won" onclick="filterLeads('won', this)">
-                            <i class="fa-solid fa-trophy"></i> Won Deals
-                        </button>
-                        <button class="pill-btn" data-lead-filter="contacted" onclick="filterLeads('contacted', this)">
-                            <i class="fa-solid fa-paper-plane"></i> Contacted
-                        </button>
-                    </div>
-                </div>
-
-                <div class="toolbar-right">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input 
-                            type="text" 
-                            id="lead-search" 
-                            placeholder="Search client, company, notes..." 
-                            onkeyup="searchLeads(this.value)"
-                        >
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table Responsive Container -->
-            <div class="table-responsive">
-                <table class="data-table" id="leads-table">
-                    <thead>
-                        <tr>
-                            <th>Prospect & Company</th>
-                            <th>Channel / Outreach</th>
-                            <th>Contact Info</th>
-                            <th>Estimated Fee</th>
-                            <th>Call / Pitch Status</th>
-                            <th>Call / Follow-up Date</th>
-                            <th>Pitch Strategy / Notes</th>
-                            <th class="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leads-tbody">
-                        {% for lead in leads %}
-                        <tr class="table-row" 
-                            data-lead-id="{{ lead.id }}" 
-                            data-lead-status="{{ lead.call_status }}" 
-                            data-search="{{ lead.client_name }} {{ lead.company }} {{ lead.channel }} {{ lead.contact_info }} {{ lead.pitch_notes }}">
-                            
-                            <!-- Prospect Name & Company -->
-                            <td>
-                                <div class="project-cell">
-                                    <span class="project-name">{{ lead.client_name }}</span>
-                                    {% if lead.company %}
-                                        <span class="client-cell">
-                                            <i class="fa-regular fa-building"></i> {{ lead.company }}
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </td>
-
-                            <!-- Channel -->
-                            <td>
-                                <span class="platform-tag">
-                                    {% if 'LinkedIn' in lead.channel %}
-                                        <i class="fa-brands fa-linkedin"></i>
-                                    {% elif 'Upwork' in lead.channel %}
-                                        <i class="fa-brands fa-upwork"></i>
-                                    {% elif 'Email' in lead.channel %}
-                                        <i class="fa-regular fa-envelope"></i>
-                                    {% elif 'Phone' in lead.channel %}
-                                        <i class="fa-solid fa-phone"></i>
-                                    {% else %}
-                                        <i class="fa-solid fa-paper-plane"></i>
-                                    {% endif %}
-                                    {{ lead.channel }}
-                                </span>
-                            </td>
-
-                            <!-- Contact Info -->
-                            <td>
-                                <span class="contact-pill" title="{{ lead.contact_info }}">
-                                    {{ lead.contact_info or 'Not specified' }}
-                                </span>
-                            </td>
-
-                            <!-- Estimated Fee -->
-                            <td class="amount-cell">
-                                <span class="currency-symbol">{{ session.get('currency', '$') }}</span>{{ "{:,.2f}".format(lead.estimated_fee) }}
-                            </td>
-
-                            <!-- Status Dropdown / Action -->
-                            <td>
-                                <select class="status-select status-select-{{ lead.call_status }}" onchange="changeLeadStatus({{ lead.id }}, this.value)">
-                                    <option value="new" {% if lead.call_status == 'new' %}selected{% endif %}>🆕 New Lead</option>
-                                    <option value="contacted" {% if lead.call_status == 'contacted' %}selected{% endif %}>✉️ Contacted</option>
-                                    <option value="call_scheduled" {% if lead.call_status == 'call_scheduled' %}selected{% endif %}>📞 Call Scheduled</option>
-                                    <option value="call_done" {% if lead.call_status == 'call_done' %}selected{% endif %}>✅ Call Completed</option>
-                                    <option value="proposal_sent" {% if lead.call_status == 'proposal_sent' %}selected{% endif %}>📄 Proposal Sent</option>
-                                    <option value="won" {% if lead.call_status == 'won' %}selected{% endif %}>🏆 Won Deal</option>
-                                    <option value="lost" {% if lead.call_status == 'lost' %}selected{% endif %}>❌ Lost</option>
-                                </select>
-                            </td>
-
-                            <!-- Call / Follow-up Date -->
-                            <td class="date-cell">
-                                {% if lead.call_date %}
-                                    <i class="fa-regular fa-calendar-check text-primary"></i> {{ lead.call_date }}
-                                {% else %}
-                                    <span class="text-muted">No date set</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- Pitch Strategy & Notes -->
-                            <td>
-                                <span class="project-notes" title="{{ lead.pitch_notes }}">
-                                    {{ lead.pitch_notes or 'No notes yet' }}
-                                </span>
-                            </td>
-
-                            <!-- Actions -->
-                            <td class="text-right">
-                                <div class="action-btn-group">
-                                    {% if lead.call_status != 'won' %}
-                                    <button type="button" 
-                                        class="btn-convert-pill" 
-                                        onclick="convertLeadToProject({{ lead.id }})" 
-                                        title="Convert this won pitch into an active project in your Earnings Dashboard!">
-                                        <i class="fa-solid fa-arrow-right-arrow-left"></i> Convert to Project
-                                    </button>
-                                    {% else %}
-                                    <span class="badge-converted"><i class="fa-solid fa-check"></i> Converted</span>
-                                    {% endif %}
-                                    <button type="button" 
-                                        class="action-btn-delete" 
-                                        onclick="deleteLead({{ lead.id }})" 
-                                        title="Delete lead">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr id="no-leads-row">
-                            <td colspan="8" class="empty-state">
-                                <div class="empty-state-box">
-                                    <i class="fa-solid fa-headset empty-icon"></i>
-                                    <h3>No customer pitches logged yet</h3>
-                                    <p>Start pitching clients, schedule discovery calls, and track deal values from zero.</p>
-                                    <button class="btn-primary" onclick="openLeadModal()">
-                                        <i class="fa-solid fa-plus"></i> Add Your First Prospect Pitch
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+      <div class="kpi-card kpi-pending">
+        <div class="kpi-head">
+          <span class="kpi-label">Calls Scheduled</span>
+          <div class="kpi-icon ye"><i class="fa-solid fa-phone-volume"></i></div>
         </div>
-    </main>
+        <div class="kpi-amount">{{ stats.calls_scheduled }}</div>
+        <div class="kpi-foot">
+          <span class="badge badge-yellow"><i class="fa-regular fa-calendar-check"></i> Discovery calls</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-freelance">
+        <div class="kpi-head">
+          <span class="kpi-label">Won Deals</span>
+          <div class="kpi-icon cy"><i class="fa-solid fa-trophy"></i></div>
+        </div>
+        <div class="kpi-amount">{{ stats.won_leads }}</div>
+        <div class="kpi-foot">
+          <span class="badge badge-cyan"><i class="fa-solid fa-percent"></i> {{ stats.conversion_rate }}% win rate</span>
+          <span class="kpi-subtext">{{ cur }}{{ "{:,.0f}".format(stats.won_val) }} won</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="table-card">
+      <div class="table-top">
+        <div class="table-top-left">
+          <div class="section-heading">
+            <i class="fa-solid fa-address-book"></i> Client Outreach Pipeline
+            <span class="count-pill" id="lead-count">{{ leads|length }}</span>
+          </div>
+          <div class="filter-group">
+            <button class="fpill active" onclick="filterLeads('all',this)">All</button>
+            <button class="fpill" onclick="filterLeads('call_scheduled',this)"><i class="fa-solid fa-phone"></i> Calls</button>
+            <button class="fpill" onclick="filterLeads('proposal_sent',this)"><i class="fa-solid fa-file-signature"></i> Proposals</button>
+            <button class="fpill" onclick="filterLeads('won',this)"><i class="fa-solid fa-trophy"></i> Won</button>
+            <button class="fpill" onclick="filterLeads('lost',this)"><i class="fa-solid fa-xmark"></i> Lost</button>
+          </div>
+        </div>
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search client, company, notes…" oninput="searchLeads(this.value)">
+        </div>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Prospect & Company</th>
+              <th>Outreach Channel</th>
+              <th>Contact Info</th>
+              <th>Est. Fee</th>
+              <th>Status</th>
+              <th>Call / Follow-up Date</th>
+              <th>Pitch Notes</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-body">
+            {% for l in leads %}
+            <tr data-lid="{{ l.id }}" data-lstatus="{{ l.call_status }}"
+                data-search="{{ l.client_name }} {{ l.company or '' }} {{ l.channel }} {{ l.contact_info or '' }} {{ l.pitch_notes or '' }}">
+
+              <!-- Prospect Name & Company -->
+              <td>
+                <div class="cell-title">{{ l.client_name }}</div>
+                {% if l.company %}
+                  <div class="cell-client"><i class="fa-regular fa-building"></i> {{ l.company }}</div>
+                {% endif %}
+              </td>
+
+              <!-- Channel -->
+              <td><div class="cell-platform">
+                {% if 'LinkedIn' in (l.channel or '') %}<i class="fa-brands fa-linkedin"></i>
+                {% elif 'Upwork'   in (l.channel or '') %}<i class="fa-brands fa-upwork"></i>
+                {% elif 'Email'    in (l.channel or '') %}<i class="fa-regular fa-envelope"></i>
+                {% elif 'Phone'    in (l.channel or '') %}<i class="fa-solid fa-phone"></i>
+                {% elif 'Twitter'  in (l.channel or '') %}<i class="fa-brands fa-x-twitter"></i>
+                {% else %}<i class="fa-solid fa-paper-plane"></i>{% endif %}
+                {{ l.channel }}
+              </div></td>
+
+              <!-- Contact Info -->
+              <td><div class="contact-cell" title="{{ l.contact_info or '' }}">{{ l.contact_info or '—' }}</div></td>
+
+              <!-- Est. Fee -->
+              <td><div class="cell-amount"><span class="sym">{{ cur }}</span>{{ "{:,.2f}".format(l.estimated_fee) }}</div></td>
+
+              <!-- Status Select -->
+              <td>
+                <select class="lead-select ls-{{ l.call_status }}" onchange="changeLeadStatus({{ l.id }}, this)">
+                  <option value="new"           {% if l.call_status=='new'           %}selected{% endif %}>🆕 New Lead</option>
+                  <option value="contacted"     {% if l.call_status=='contacted'     %}selected{% endif %}>✉️ Contacted</option>
+                  <option value="call_scheduled"{% if l.call_status=='call_scheduled'%}selected{% endif %}>📞 Call Scheduled</option>
+                  <option value="call_done"     {% if l.call_status=='call_done'     %}selected{% endif %}>✅ Call Done</option>
+                  <option value="proposal_sent" {% if l.call_status=='proposal_sent' %}selected{% endif %}>📄 Proposal Sent</option>
+                  <option value="won"           {% if l.call_status=='won'           %}selected{% endif %}>🏆 Won Deal</option>
+                  <option value="lost"          {% if l.call_status=='lost'          %}selected{% endif %}>❌ Lost</option>
+                </select>
+              </td>
+
+              <!-- Date -->
+              <td><div class="cell-date">
+                {% if l.call_date %}<i class="fa-regular fa-calendar-check" style="color:var(--accent)"></i> {{ l.call_date }}
+                {% else %}<span style="color:var(--t3)">—</span>{% endif %}
+              </div></td>
+
+              <!-- Notes -->
+              <td><div class="note-cell" title="{{ l.pitch_notes or '' }}">{{ l.pitch_notes or '—' }}</div></td>
+
+              <!-- Actions -->
+              <td class="text-right">
+                <div class="act-group">
+                  {% if l.call_status != 'won' %}
+                    <button class="convert-btn" onclick="convertLead({{ l.id }})" title="Convert won pitch to a project in Earnings">
+                      <i class="fa-solid fa-arrow-right-arrow-left"></i> Convert to Project
+                    </button>
+                  {% else %}
+                    <span class="won-badge"><i class="fa-solid fa-check"></i> Converted</span>
+                  {% endif %}
+                  <button class="act-btn" onclick="deleteLead({{ l.id }})" title="Delete lead">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-headset"></i></div>
+                <h3>No prospects yet</h3>
+                <p>Start adding client pitches, track discovery calls, and convert wins to earnings.</p>
+                <button class="btn btn-primary" onclick="openModal('lead-modal')"><i class="fa-solid fa-plus"></i> Add First Prospect</button>
+              </div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<!-- Modal: Add New Lead / Pitch -->
-<div class="modal-backdrop" id="add-lead-modal" onclick="closeLeadModalOnBackdrop(event)">
-    <div class="modal-card animate-scale-up">
-        <div class="modal-header">
-            <div class="modal-title-box">
-                <div class="modal-icon"><i class="fa-solid fa-user-tie"></i></div>
-                <div>
-                    <h3 class="modal-title">Log New Client Pitch</h3>
-                    <p class="modal-subtitle">Track customer discovery calls, outreach, and proposed deal fees</p>
-                </div>
-            </div>
-            <button type="button" class="modal-close" onclick="closeLeadModal()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+<!-- ─── ADD LEAD MODAL ─── -->
+<div class="modal-overlay" id="lead-modal" onclick="backdropClose(event,'lead-modal')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <div class="modal-icon"><i class="fa-solid fa-user-tie"></i></div>
+        <div>
+          <div class="modal-title">Log New Client Pitch</div>
+          <div class="modal-subtitle">Track outreach, calls, fees and proposals</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('lead-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="lead-form" onsubmit="submitLead(event)">
+      <div class="modal-body">
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Prospect Name *</label>
+            <input type="text" name="client_name" required placeholder="e.g. David Miller">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company / Brand</label>
+            <input type="text" name="company" placeholder="e.g. Miller Real Estate">
+          </div>
         </div>
 
-        <form id="add-lead-form" onsubmit="submitNewLead(event)">
-            <div class="modal-body">
-                <!-- Prospect Name & Company Row -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="lead-client" class="form-label">Prospect / Client Name *</label>
-                        <input type="text" id="lead-client" name="client_name" required placeholder="e.g. David Miller" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="lead-company" class="form-label">Company / Brand</label>
-                        <input type="text" id="lead-company" name="company" placeholder="e.g. Miller Real Estate" class="form-control">
-                    </div>
-                </div>
-
-                <!-- Channel & Quoted Fee Row -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="lead-channel" class="form-label">Outreach Channel *</label>
-                        <select id="lead-channel" name="channel" class="form-control">
-                            <option value="Cold Email" selected>Cold Email</option>
-                            <option value="LinkedIn DM">LinkedIn Outreach</option>
-                            <option value="Upwork Proposal">Upwork Proposal</option>
-                            <option value="Direct Phone Call">Direct Phone Call</option>
-                            <option value="Client Referral">Client Referral</option>
-                            <option value="Twitter / X">Twitter / X</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="lead-fee" class="form-label">Quoted / Estimated Fee ({{ session.get('currency', '$') }})</label>
-                        <div class="input-with-prefix">
-                            <span class="input-prefix">{{ session.get('currency', '$') }}</span>
-                            <input type="number" step="0.01" min="0" id="lead-fee" name="estimated_fee" placeholder="1500.00" class="form-control">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Call Status & Call Date Row -->
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="lead-status" class="form-label">Call / Pitch Status *</label>
-                        <select id="lead-status" name="call_status" class="form-control">
-                            <option value="new" selected>New Lead (Not contacted yet)</option>
-                            <option value="contacted">Contacted (Message / Email Sent)</option>
-                            <option value="call_scheduled">Call Scheduled (Discovery Call)</option>
-                            <option value="call_done">Call Completed</option>
-                            <option value="proposal_sent">Proposal Sent</option>
-                            <option value="won">Won Deal (Closed!)</option>
-                            <option value="lost">Lost</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="lead-date" class="form-label">Call Date / Next Follow-up</label>
-                        <input type="date" id="lead-date" name="call_date" class="form-control">
-                    </div>
-                </div>
-
-                <!-- Contact Details -->
-                <div class="form-group">
-                    <label for="lead-contact" class="form-label">Contact Details (Email / Phone / LinkedIn link)</label>
-                    <input type="text" id="lead-contact" name="contact_info" placeholder="e.g. david@miller.com or +1 555-0199" class="form-control">
-                </div>
-
-                <!-- Pitch Strategy & Talking Points -->
-                <div class="form-group">
-                    <label for="lead-notes" class="form-label">Pitch Strategy / Scope / Notes</label>
-                    <textarea id="lead-notes" name="pitch_notes" rows="3" placeholder="e.g. Pitching a modern mobile-first landing page redesign with Next.js + Stripe integration. Client wants launch by next month." class="form-control"></textarea>
-                </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Outreach Channel *</label>
+            <select name="channel">
+              <option value="Cold Email" selected>Cold Email</option>
+              <option value="LinkedIn DM">LinkedIn DM</option>
+              <option value="Upwork Proposal">Upwork Proposal</option>
+              <option value="Direct Phone Call">Direct Phone Call</option>
+              <option value="Client Referral">Client Referral</option>
+              <option value="Twitter / X">Twitter / X</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quoted / Estimated Fee ({{ cur }})</label>
+            <div class="input-prefix-wrap">
+              <span class="input-prefix">{{ cur }}</span>
+              <input type="number" step="0.01" min="0" name="estimated_fee" placeholder="1500.00">
             </div>
+          </div>
+        </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeLeadModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="btn-submit-lead">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Prospect Pitch
-                </button>
-            </div>
-        </form>
-    </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Pitch / Call Status *</label>
+            <select name="call_status">
+              <option value="new" selected>🆕 New Lead</option>
+              <option value="contacted">✉️ Contacted</option>
+              <option value="call_scheduled">📞 Call Scheduled</option>
+              <option value="call_done">✅ Call Done</option>
+              <option value="proposal_sent">📄 Proposal Sent</option>
+              <option value="won">🏆 Won Deal</option>
+              <option value="lost">❌ Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Call Date / Follow-up</label>
+            <input type="date" name="call_date">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact Details (email / phone / LinkedIn URL)</label>
+          <input type="text" name="contact_info" placeholder="e.g. david@miller.com or +1 555-0199">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Pitch Strategy / Scope / Notes</label>
+          <textarea name="pitch_notes" rows="3" placeholder="e.g. Pitching a mobile-first Next.js redesign with Stripe checkout. Budget: ~$3k."></textarea>
+        </div>
+
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('lead-modal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="lead-submit-btn">
+          <i class="fa-solid fa-floppy-disk"></i> Save Prospect
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function openLeadModal() {
-    const modal = document.getElementById('add-lead-modal');
-    if (modal) {
-        modal.classList.add('open');
-        document.getElementById('lead-client').focus();
-    }
-}
-
-function closeLeadModal() {
-    const modal = document.getElementById('add-lead-modal');
-    if (modal) modal.classList.remove('open');
-}
-
-function closeLeadModalOnBackdrop(e) {
-    if (e.target.id === 'add-lead-modal') {
-        closeLeadModal();
-    }
-}
-
-async function submitNewLead(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-lead');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-
-    const form = document.getElementById('add-lead-form');
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-        const res = await fetch('/api/leads/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const resData = await res.json();
-        if (resData.success) {
-            showToast('Client pitch added successfully!', 'success');
-            closeLeadModal();
-            form.reset();
-            window.location.reload();
-        } else {
-            showToast(resData.message || 'Error adding lead', 'danger');
-        }
-    } catch (err) {
-        showToast('Network error while saving lead.', 'danger');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Prospect Pitch';
-    }
-}
-
-async function changeLeadStatus(leadId, newStatus) {
-    try {
-        const res = await fetch(`/api/leads/${leadId}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast(`Status updated to ${newStatus.replace('_', ' ').toUpperCase()}`, 'info');
-            window.location.reload();
-        } else {
-            showToast('Failed to update status', 'danger');
-        }
-    } catch (err) {
-        showToast('Error communicating with server', 'danger');
-    }
-}
-
-async function convertLeadToProject(leadId) {
-    if (!confirm('Convert this prospect into an active Project in your Earnings Dashboard?')) {
-        return;
-    }
-
-    try {
-        const res = await fetch(`/api/leads/${leadId}/convert`, {
-            method: 'POST'
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('Deal won! Added to your Earnings Dashboard.', 'success');
-            setTimeout(() => {
-                window.location.href = "{{ url_for('dashboard') }}";
-            }, 1200);
-        } else {
-            showToast(data.message || 'Error converting deal', 'danger');
-        }
-    } catch (err) {
-        showToast('Network error while converting deal.', 'danger');
-    }
-}
-
-async function deleteLead(leadId) {
-    if (!confirm('Are you sure you want to delete this prospect?')) {
-        return;
-    }
-
-    try {
-        const res = await fetch(`/api/leads/${leadId}/delete`, {
-            method: 'POST'
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('Lead removed', 'success');
-            const row = document.querySelector(`tr[data-lead-id="${leadId}"]`);
-            if (row) row.remove();
-            updateLeadsCount();
-        } else {
-            showToast(data.message || 'Error deleting lead', 'danger');
-        }
-    } catch (err) {
-        showToast('Network error while deleting lead.', 'danger');
-    }
-}
-
+// ─── FILTER LEADS ───
 function filterLeads(status, btn) {
-    document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const rows = document.querySelectorAll('#leads-tbody .table-row');
-    rows.forEach(row => {
-        const rowStatus = row.dataset.leadStatus;
-        if (status === 'all' || rowStatus === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    updateLeadsCount();
+  document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#leads-body tr[data-lid]').forEach(row => {
+    const match = status === 'all' || row.dataset.lstatus === status;
+    row.style.display = match ? '' : 'none';
+  });
+  updateLeadCount();
 }
 
-function searchLeads(query) {
-    const q = query.trim().toLowerCase();
-    const rows = document.querySelectorAll('#leads-tbody .table-row');
-    rows.forEach(row => {
-        const searchContent = (row.dataset.search || '').toLowerCase();
-        if (!q || searchContent.includes(q)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-    updateLeadsCount();
+// ─── SEARCH LEADS ───
+function searchLeads(q) {
+  const lq = q.trim().toLowerCase();
+  document.querySelectorAll('#leads-body tr[data-lid]').forEach(row => {
+    row.style.display = (!lq || row.dataset.search.toLowerCase().includes(lq)) ? '' : 'none';
+  });
+  updateLeadCount();
 }
 
-function updateLeadsCount() {
-    const visible = document.querySelectorAll('#leads-tbody .table-row:not([style*="display: none"])');
-    const badge = document.getElementById('leads-count');
-    if (badge) badge.textContent = visible.length;
+function updateLeadCount() {
+  const vis = document.querySelectorAll('#leads-body tr[data-lid]:not([style*="display: none"])').length;
+  const el = document.getElementById('lead-count');
+  if (el) el.textContent = vis;
+}
+
+// ─── OPEN / CLOSE MODAL ───
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function backdropClose(e, id) { if (e.target.id === id) closeModal(id); }
+
+// ─── SUBMIT LEAD ───
+async function submitLead(e) {
+  e.preventDefault();
+  const btn = document.getElementById('lead-submit-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  const data = Object.fromEntries(new FormData(document.getElementById('lead-form')).entries());
+  try {
+    const res = await fetch('/api/leads/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const j = await res.json();
+    if (j.success) { showToast('Prospect added!', 'success'); closeModal('lead-modal'); setTimeout(()=> location.reload(), 800); }
+    else showToast(j.message || 'Error adding prospect', 'danger');
+  } catch { showToast('Network error', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Prospect'; }
+}
+
+// ─── CHANGE LEAD STATUS ───
+async function changeLeadStatus(id, sel) {
+  const status = sel.value;
+  // Update select styling instantly
+  sel.className = `lead-select ls-${status}`;
+  try {
+    const res = await fetch(`/api/leads/${id}/status`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status}) });
+    const j = await res.json();
+    if (j.success) showToast(`Status → ${status.replace('_',' ').toUpperCase()}`, 'info');
+    else { showToast('Failed to update status', 'danger'); location.reload(); }
+  } catch { showToast('Network error', 'danger'); }
+}
+
+// ─── CONVERT LEAD TO PROJECT ───
+async function convertLead(id) {
+  if (!confirm('Convert this prospect into a Project in your Earnings Dashboard?')) return;
+  try {
+    const res = await fetch(`/api/leads/${id}/convert`, { method:'POST' });
+    const j = await res.json();
+    if (j.success) { showToast('Deal converted to project!', 'success'); setTimeout(()=> window.location.href = "{{ url_for('dashboard') }}", 1200); }
+    else showToast(j.message || 'Error converting deal', 'danger');
+  } catch { showToast('Network error', 'danger'); }
+}
+
+// ─── DELETE LEAD ───
+async function deleteLead(id) {
+  if (!confirm('Delete this prospect?')) return;
+  try {
+    const res = await fetch(`/api/leads/${id}/delete`, { method:'POST' });
+    const j = await res.json();
+    if (j.success) {
+      showToast('Lead deleted', 'success');
+      const row = document.querySelector(`tr[data-lid="${id}"]`);
+      if (row) row.remove();
+      updateLeadCount();
+    } else showToast(j.message || 'Error deleting', 'danger');
+  } catch { showToast('Network error', 'danger'); }
 }
 </script>
 {% endblock %}

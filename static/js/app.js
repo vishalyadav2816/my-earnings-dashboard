@@ -1,429 +1,245 @@
 /**
- * EarnFlow - Freelance & Project Earnings Dashboard Client Script
- * Handles real-time charts, CRUD operations, filters, and CSV export.
+ * EarnFlow — app.js
+ * Handles: Charts, CRUD for earnings, search, filters, CSV export
+ * All functions used by dashboard.html
  */
 
-let monthlyChart = null;
-let platformChart = null;
+/* ─── Chart.js setup ─── */
+Chart.defaults.color          = '#94a3b8';
+Chart.defaults.font.family    = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.borderColor    = 'rgba(42,51,71,0.6)';
+
+let monthlyChartInst  = null;
+let platformChartInst = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default date for Add Modal
-    const today = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('new-date');
-    if (dateInput) {
-        dateInput.value = today;
-    }
-
-    // Initialize Charts
-    initCharts();
+  // Default date to today for earning modal
+  const ed = document.getElementById('e-date');
+  if (ed) ed.value = new Date().toISOString().split('T')[0];
+  loadCharts();
 });
 
-// Toast notification helper
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
+/* ── MODAL HELPERS ── */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function backdropClose(e, id) { if (e.target.id === id) closeModal(id); }
 
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type} animate-slide-in`;
-
-    let icon = 'fa-circle-check';
-    if (type === 'danger') icon = 'fa-circle-exclamation';
-    else if (type === 'warning') icon = 'fa-triangle-exclamation';
-    else if (type === 'info') icon = 'fa-circle-info';
-
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fa-solid ${icon}"></i></div>
-        <div class="toast-content">${message}</div>
-        <button class="toast-close" onclick="this.parentElement.remove()">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    `;
-
-    container.appendChild(toast);
-    setTimeout(() => {
-        if (toast.parentElement) toast.remove();
-    }, 4500);
+/* ── CHARTS ── */
+async function loadCharts() {
+  try {
+    const r = await fetch('/api/analytics');
+    const d = await r.json();
+    if (!d.success) return;
+    drawMonthly(d.monthly);
+    drawPlatform(d.platforms);
+  } catch (err) { console.warn('Charts failed:', err); }
 }
 
-// Modal handling
-function openAddModal() {
-    const modal = document.getElementById('add-modal');
-    if (modal) {
-        modal.classList.add('open');
-        document.getElementById('new-title').focus();
+function drawMonthly(data) {
+  const ctx = document.getElementById('monthlyChart');
+  if (!ctx) return;
+  if (monthlyChartInst) monthlyChartInst.destroy();
+
+  monthlyChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: 'Project Revenue',
+          data: data.project,
+          backgroundColor: 'rgba(99,102,241,0.85)',
+          hoverBackgroundColor: '#818cf8',
+          borderRadius: 6, borderSkipped: false,
+          barPercentage: 0.6, categoryPercentage: 0.7
+        },
+        {
+          label: 'Freelance Revenue',
+          data: data.freelance,
+          backgroundColor: 'rgba(6,182,212,0.85)',
+          hoverBackgroundColor: '#38bdf8',
+          borderRadius: 6, borderSkipped: false,
+          barPercentage: 0.6, categoryPercentage: 0.7
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top', align: 'end',
+          labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 12, weight: '700' } }
+        },
+        tooltip: {
+          backgroundColor: '#1e2436', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+          borderColor: '#2a3347', borderWidth: 1, padding: 12, boxPadding: 6,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+        y: {
+          grid: { color: 'rgba(42,51,71,0.6)' },
+          ticks: { callback: v => '$' + v.toLocaleString(), font: { family: "'JetBrains Mono', monospace", size: 11 } }
+        }
+      }
     }
+  });
 }
 
-function closeAddModal() {
-    const modal = document.getElementById('add-modal');
-    if (modal) modal.classList.remove('open');
-}
+function drawPlatform(data) {
+  const ctx = document.getElementById('platformChart');
+  if (!ctx) return;
+  if (platformChartInst) platformChartInst.destroy();
 
-function closeModalOnBackdrop(e) {
-    if (e.target.id === 'add-modal') {
-        closeAddModal();
+  const palette = ['#6366f1','#06b6d4','#10b981','#f59e0b','#ec4899','#8b5cf6'];
+
+  platformChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        data: data.values,
+        backgroundColor: palette.slice(0, data.labels.length),
+        borderColor: '#161b27',
+        borderWidth: 3,
+        hoverOffset: 7
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '70%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 11, weight: '600' } }
+        },
+        tooltip: {
+          backgroundColor: '#1e2436', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+          borderColor: '#2a3347', borderWidth: 1, padding: 10,
+          callbacks: {
+            label: ctx => ` ${ctx.label}: $${ctx.parsed.toLocaleString()}`
+          }
+        }
+      }
     }
+  });
 }
 
-function updateStreamUI(type) {
-    const optProj = document.getElementById('opt-project');
-    const optFree = document.getElementById('opt-freelance');
-    if (type === 'project') {
-        optProj.classList.add('active');
-        optFree.classList.remove('active');
+/* ── ADD EARNING ── */
+async function submitEarning(e) {
+  e.preventDefault();
+  const btn = document.getElementById('earn-submit-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+  const data = Object.fromEntries(new FormData(document.getElementById('earn-form')).entries());
+  try {
+    const res = await fetch('/api/earnings/add', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const j = await res.json();
+    if (j.success) {
+      showToast('Earning saved!', 'success');
+      closeModal('earn-modal');
+      setTimeout(() => location.reload(), 800);
     } else {
-        optFree.classList.add('active');
-        optProj.classList.remove('active');
+      showToast(j.message || 'Error saving earning', 'danger');
     }
+  } catch { showToast('Network error. Try again.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Earning'; }
 }
 
-// Chart.js initialization & live updates
-async function initCharts() {
-    try {
-        const res = await fetch('/api/analytics');
-        const data = await res.json();
-
-        if (!data.success) return;
-
-        renderMonthlyTrendChart(data.monthly);
-        renderPlatformChart(data.platforms);
-    } catch (err) {
-        console.error('Failed to load chart analytics:', err);
-    }
-}
-
-function renderMonthlyTrendChart(monthlyData) {
-    const ctx = document.getElementById('monthlyTrendChart');
-    if (!ctx) return;
-
-    if (monthlyChart) {
-        monthlyChart.destroy();
-    }
-
-    monthlyChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: monthlyData.labels,
-            datasets: [
-                {
-                    label: 'Project Revenue',
-                    data: monthlyData.project,
-                    backgroundColor: 'rgba(99, 102, 241, 0.85)',
-                    hoverBackgroundColor: '#818cf8',
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barPercentage: 0.65,
-                    categoryPercentage: 0.7
-                },
-                {
-                    label: 'Freelance Revenue',
-                    data: monthlyData.freelance,
-                    backgroundColor: 'rgba(14, 165, 233, 0.85)',
-                    hoverBackgroundColor: '#38bdf8',
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barPercentage: 0.65,
-                    categoryPercentage: 0.7
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        color: '#94a3b8',
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 16,
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleColor: '#f8fafc',
-                    bodyColor: '#cbd5e1',
-                    borderColor: '#334155',
-                    borderWidth: 1,
-                    padding: 12,
-                    boxPadding: 6,
-                    usePointStyle: true,
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) label += ': ';
-                            if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
-                            }
-                            return label;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        color: '#64748b',
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' }
-                    }
-                },
-                y: {
-                    grid: { color: 'rgba(51, 65, 85, 0.4)' },
-                    ticks: {
-                        color: '#64748b',
-                        callback: (value) => '$' + value.toLocaleString(),
-                        font: { family: "'JetBrains Mono', monospace", size: 11 }
-                    }
-                }
-            }
-        }
+/* ── TOGGLE STATUS ── */
+async function toggleStatus(id, current) {
+  const next = current === 'paid' ? 'pending' : 'paid';
+  try {
+    const res = await fetch(`/api/earnings/${id}/status`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: next })
     });
-}
-
-function renderPlatformChart(platformData) {
-    const ctx = document.getElementById('platformPieChart');
-    if (!ctx) return;
-
-    if (platformChart) {
-        platformChart.destroy();
+    const j = await res.json();
+    if (j.success) {
+      showToast(`Marked as ${next.toUpperCase()}`, 'info');
+      location.reload();
+    } else {
+      showToast('Failed to update status', 'danger');
     }
-
-    const vibrantPalette = [
-        '#6366f1', // Indigo (Direct)
-        '#0ea5e9', // Sky (Upwork)
-        '#10b981', // Emerald (Fiverr)
-        '#f59e0b', // Amber (Toptal)
-        '#ec4899', // Pink (Freelancer)
-        '#8b5cf6'  // Purple (Other)
-    ];
-
-    platformChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: platformData.labels,
-            datasets: [{
-                data: platformData.values,
-                backgroundColor: vibrantPalette.slice(0, platformData.labels.length),
-                borderColor: '#131b2e',
-                borderWidth: 3,
-                hoverOffset: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '72%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#94a3b8',
-                        padding: 14,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleColor: '#f8fafc',
-                    bodyColor: '#cbd5e1',
-                    borderColor: '#334155',
-                    borderWidth: 1,
-                    padding: 10,
-                    callbacks: {
-                        label: function(context) {
-                            const val = context.parsed;
-                            return ' ' + context.label + ': $' + val.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
+  } catch { showToast('Network error', 'danger'); }
 }
 
-// Submit New Earning Form
-async function submitNewEarning(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-earning');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-
-    const form = document.getElementById('add-earning-form');
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-        const response = await fetch('/api/earnings/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const res = await response.json();
-        if (res.success) {
-            showToast('Earning added successfully!', 'success');
-            closeAddModal();
-            form.reset();
-            // Reset stream UI
-            updateStreamUI('project');
-            // Reload page to update entire KPI card numbers and charts cleanly
-            window.location.reload();
-        } else {
-            showToast(res.message || 'Error adding entry', 'danger');
-        }
-    } catch (err) {
-        showToast('Network error while saving.', 'danger');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Earning';
+/* ── DELETE EARNING ── */
+async function deleteEarning(id) {
+  if (!confirm('Delete this earning record?')) return;
+  try {
+    const res = await fetch(`/api/earnings/${id}/delete`, { method: 'POST' });
+    const j = await res.json();
+    if (j.success) {
+      showToast('Record deleted', 'success');
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (row) row.remove();
+      updateCount();
+    } else {
+      showToast(j.message || 'Error deleting record', 'danger');
     }
+  } catch { showToast('Network error', 'danger'); }
 }
 
-// Toggle Status (Paid <-> Pending)
-async function toggleStatus(recordId, currentStatus) {
-    const nextStatus = currentStatus === 'paid' ? 'pending' : 'paid';
-
-    try {
-        const res = await fetch(`/api/earnings/${recordId}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: nextStatus })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            showToast(`Status updated to ${nextStatus.toUpperCase()}`, 'info');
-            // Reload to recalculate total earned, pending, and update charts
-            window.location.reload();
-        } else {
-            showToast('Failed to update status', 'danger');
-        }
-    } catch (err) {
-        showToast('Error communicating with server', 'danger');
-    }
+/* ── FILTER ROWS ── */
+function filterRows(type, btn) {
+  document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#earn-body tr[data-id]').forEach(row => {
+    const match = type === 'all'
+      || row.dataset.type   === type
+      || row.dataset.status === type;
+    row.style.display = match ? '' : 'none';
+  });
+  updateCount();
 }
 
-// Delete Record
-async function deleteRecord(recordId) {
-    if (!confirm('Are you sure you want to delete this earnings record?')) {
-        return;
-    }
-
-    try {
-        const res = await fetch(`/api/earnings/${recordId}/delete`, {
-            method: 'POST'
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            showToast('Record deleted successfully', 'success');
-            const row = document.querySelector(`tr[data-id="${recordId}"]`);
-            if (row) {
-                row.remove();
-                // Update row count badge
-                updateRecordCount();
-            }
-            // Refresh charts
-            initCharts();
-        } else {
-            showToast(data.message || 'Error deleting entry', 'danger');
-        }
-    } catch (err) {
-        showToast('Network error while deleting.', 'danger');
-    }
+/* ── SEARCH ROWS ── */
+function searchRows(q) {
+  const lq = q.trim().toLowerCase();
+  document.querySelectorAll('#earn-body tr[data-id]').forEach(row => {
+    row.style.display = (!lq || row.dataset.search.toLowerCase().includes(lq)) ? '' : 'none';
+  });
+  updateCount();
 }
 
-// Filters (All, Project, Freelance, Paid, Pending)
-function filterRecords(type, btn) {
-    // Update active pill button
-    document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const rows = document.querySelectorAll('#earnings-tbody .table-row');
-    rows.forEach(row => {
-        const rowType = row.dataset.type;
-        const rowStatus = row.dataset.status;
-
-        if (type === 'all') {
-            row.style.display = '';
-        } else if (type === 'project' || type === 'freelance') {
-            row.style.display = (rowType === type) ? '' : 'none';
-        } else if (type === 'paid' || type === 'pending') {
-            row.style.display = (rowStatus === type) ? '' : 'none';
-        }
-    });
-
-    updateRecordCount();
+function updateCount() {
+  const vis = document.querySelectorAll('#earn-body tr[data-id]:not([style*="display: none"])').length;
+  const el = document.getElementById('earn-count');
+  if (el) el.textContent = vis;
 }
 
-// Live Search Filter
-function searchRecords(query) {
-    const q = query.trim().toLowerCase();
-    const rows = document.querySelectorAll('#earnings-tbody .table-row');
-    
-    rows.forEach(row => {
-        const searchContent = (row.dataset.search || '').toLowerCase();
-        if (!q || searchContent.includes(q)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
+/* ── CSV EXPORT ── */
+function exportCSV() {
+  const rows = document.querySelectorAll('#earn-body tr[data-id]');
+  if (!rows.length) { showToast('No records to export', 'warning'); return; }
 
-    updateRecordCount();
-}
+  const headers = ['Title','Client','Type','Platform','Date','Amount','Status','Notes'];
+  const lines = [headers.join(',')];
 
-function updateRecordCount() {
-    const visibleRows = document.querySelectorAll('#earnings-tbody .table-row:not([style*="display: none"])');
-    const badge = document.getElementById('record-count');
-    if (badge) {
-        badge.textContent = visibleRows.length;
-    }
-}
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    // Extract values from rendered cells
+    const title    = `"${(row.querySelector('.cell-title')?.textContent || '').trim()}"`;
+    const note     = `"${(row.querySelector('.cell-note')?.textContent  || '').trim().replace(/\n/g,' ')}"`;
+    const client   = `"${(row.querySelector('.cell-client')?.textContent || '').trim()}"`;
+    const type     = `"${row.dataset.type}"`;
+    const platform = `"${(row.querySelector('.cell-platform')?.textContent || '').trim()}"`;
+    const date     = `"${(row.querySelector('.cell-date')?.textContent    || '').trim()}"`;
+    const amount   = `"${(row.querySelector('.cell-amount')?.textContent  || '').replace(/[^0-9.]/g,'').trim()}"`;
+    const status   = `"${row.dataset.status}"`;
+    lines.push([title, client, type, platform, date, amount, status, note].join(','));
+  });
 
-// Export to CSV
-function exportToCSV() {
-    const rows = document.querySelectorAll('#earnings-tbody .table-row');
-    if (rows.length === 0) {
-        showToast('No records available to export', 'warning');
-        return;
-    }
-
-    const headers = ['Title', 'Client', 'Stream Type', 'Platform', 'Date', 'Amount', 'Status', 'Notes'];
-    const csvContent = [];
-    csvContent.push(headers.join(','));
-
-    rows.forEach(row => {
-        const title = `"${row.querySelector('.project-name')?.textContent.trim() || ''}"`;
-        const notes = `"${row.querySelector('.project-notes')?.textContent.replace(/[\n\r]+/g, ' ').trim() || ''}"`;
-        const client = `"${row.querySelector('.client-cell span')?.textContent.trim() || ''}"`;
-        const streamType = `"${row.dataset.type || ''}"`;
-        const platform = `"${row.querySelector('.platform-tag')?.textContent.trim() || ''}"`;
-        const date = `"${row.querySelector('.date-cell')?.textContent.trim() || ''}"`;
-        const amount = `"${row.querySelector('.amount-cell')?.textContent.replace(/[^0-9.]/g, '') || ''}"`;
-        const status = `"${row.dataset.status || ''}"`;
-
-        csvContent.push([title, client, streamType, platform, date, amount, status, notes].join(','));
-    });
-
-    const blob = new Blob([csvContent.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `earnings_report_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('Exported CSV successfully!', 'success');
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `earnings_${new Date().toISOString().split('T')[0]}.csv`
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast('CSV exported successfully!', 'success');
 }

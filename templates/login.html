@@ -1,317 +1,185 @@
 {% extends "base.html" %}
-
-{% block title %}Sign In &bull; Freelance & Project Earnings Dashboard{% endblock %}
+{% block title %}Sign In · EarnFlow{% endblock %}
 
 {% block content %}
-<div class="auth-page-wrapper">
-    <div class="auth-grid">
-        <!-- Left Side: Brand Showcase -->
-        <div class="auth-brand-side">
-            <div class="brand-side-content">
-                <div class="brand-badge">
-                    <span class="badge-dot"></span>
-                    <span>Freelance & Project Analytics v2.4</span>
-                </div>
-                
-                <h1 class="brand-title">
-                    Master Your <span class="gradient-text">Income Streams</span> in One Powerful Place.
-                </h1>
-                
-                <p class="brand-description">
-                    Track fixed-scope projects and hourly freelance client contracts. Monitor payment milestones, predict monthly revenue, and get complete financial clarity.
-                </p>
+<div class="auth-shell">
 
-                <!-- Floating Showcase Metrics -->
-                <div class="brand-metrics-grid">
-                    <div class="brand-metric-card">
-                        <div class="metric-icon project-icon">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Project Revenue</span>
-                            <span class="metric-val">$24,550</span>
-                            <span class="metric-growth positive"><i class="fa-solid fa-arrow-trend-up"></i> +18.4% this mo</span>
-                        </div>
-                    </div>
+  <!-- ── LEFT BRAND SIDE ── -->
+  <div class="auth-left">
+    <div class="brand-eyebrow"><span class="dot"></span> Freelance & Project Tracker v3.0</div>
 
-                    <div class="brand-metric-card">
-                        <div class="metric-icon freelance-icon">
-                            <i class="fa-solid fa-laptop-code"></i>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">Freelance Contracts</span>
-                            <span class="metric-val">$14,200</span>
-                            <span class="metric-growth positive"><i class="fa-solid fa-arrow-trend-up"></i> +12.1% this mo</span>
-                        </div>
-                    </div>
-                </div>
+    <h1 class="brand-h1">Track Every <span class="grad-text">Dollar You Earn</span> in One Place.</h1>
+    <p class="brand-sub">Monitor fixed-scope projects and hourly freelance work. Track payment status, analyse monthly growth, and never lose sight of what clients owe you.</p>
 
-                <!-- Feature Bullets -->
-                <div class="brand-features">
-                    <div class="feature-item">
-                        <i class="fa-solid fa-circle-check feature-check"></i>
-                        <span>Separate Project Milestones vs. Hourly Freelance Tracking</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fa-solid fa-circle-check feature-check"></i>
-                        <span>Multi-platform distribution (Upwork, Fiverr, Direct Clients, Toptal)</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fa-solid fa-circle-check feature-check"></i>
-                        <span>Live payment status tracking (Paid, Pending & Overdue)</span>
-                    </div>
-                </div>
-
-                <div class="brand-footer-note">
-                    <i class="fa-solid fa-shield-halved"></i> 256-bit encrypted local storage & secure session auth
-                </div>
-            </div>
+    <div class="stats-chips">
+      <div class="stat-chip">
+        <div class="stat-chip-icon p"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+          <div class="stat-chip-val">$33,400</div>
+          <div class="stat-chip-lbl">Project Revenue</div>
+          <div class="stat-chip-up"><i class="fa-solid fa-arrow-trend-up"></i> +18% this month</div>
         </div>
-
-        <!-- Right Side: Auth Forms (Login / Register Tabs) -->
-        <div class="auth-form-side">
-            <div class="auth-card">
-                <!-- App Logo -->
-                <div class="auth-header">
-                    <div class="app-logo">
-                        <div class="logo-box">
-                            <i class="fa-solid fa-wallet"></i>
-                        </div>
-                        <span class="logo-text">Earn<span class="logo-accent">Flow</span></span>
-                    </div>
-                    <h2 id="auth-heading" class="auth-heading">Welcome Back</h2>
-                    <p id="auth-subheading" class="auth-subheading">Sign in to review your earnings and client projects.</p>
-                </div>
-
-                <!-- Quick Demo Login Pill -->
-                <div class="demo-account-box" onclick="fillDemoCredentials()">
-                    <div class="demo-box-left">
-                        <div class="demo-sparkle"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                        <div>
-                            <div class="demo-title">Quick Demo Login</div>
-                            <div class="demo-desc">Instant access with preloaded sample earnings data</div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-demo-pill">Click to Fill</button>
-                </div>
-
-                <!-- Tabs: Login vs Register -->
-                <div class="auth-tabs">
-                    <button type="button" class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
-                    </button>
-                    <button type="button" class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">
-                        <i class="fa-solid fa-user-plus"></i> Create Account
-                    </button>
-                </div>
-
-                <!-- Login Form -->
-                <form id="login-form" method="POST" action="{{ url_for('login') }}" class="auth-form">
-                    <div class="form-group">
-                        <label for="login-email" class="form-label">
-                            <i class="fa-regular fa-envelope"></i> Email Address
-                        </label>
-                        <input 
-                            type="email" 
-                            id="login-email" 
-                            name="email" 
-                            required 
-                            placeholder="you@domain.com"
-                            class="form-control"
-                            autocomplete="email"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <div class="label-with-action">
-                            <label for="login-password" class="form-label">
-                                <i class="fa-solid fa-lock"></i> Password
-                            </label>
-                            <a href="javascript:void(0)" onclick="alert('For demo account, password is: demo123')" class="forgot-link">Forgot password?</a>
-                        </div>
-                        <div class="password-input-wrapper">
-                            <input 
-                                type="password" 
-                                id="login-password" 
-                                name="password" 
-                                required 
-                                placeholder="••••••••"
-                                class="form-control"
-                                autocomplete="current-password"
-                            >
-                            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('login-password', this)">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="remember" checked>
-                            <span>Remember me for 30 days</span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn-primary-auth">
-                        <span>Sign In to Dashboard</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </form>
-
-                <!-- Register Form (Hidden by default) -->
-                <form id="register-form" method="POST" action="{{ url_for('register') }}" class="auth-form hidden">
-                    <div class="form-group">
-                        <label for="reg-name" class="form-label">
-                            <i class="fa-regular fa-user"></i> Full Name *
-                        </label>
-                        <input 
-                            type="text" 
-                            id="reg-name" 
-                            name="full_name" 
-                            required 
-                            placeholder="e.g. Sarah Jenkins"
-                            class="form-control"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reg-email" class="form-label">
-                            <i class="fa-regular fa-envelope"></i> Email Address *
-                        </label>
-                        <input 
-                            type="email" 
-                            id="reg-email" 
-                            name="email" 
-                            required 
-                            placeholder="sarah@freelance.io"
-                            class="form-control"
-                        >
-                    </div>
-
-                    <div class="form-row-2">
-                        <div class="form-group">
-                            <label for="reg-title" class="form-label">
-                                <i class="fa-solid fa-briefcase"></i> Role / Title
-                            </label>
-                            <input 
-                                type="text" 
-                                id="reg-title" 
-                                name="title" 
-                                placeholder="UI Designer / Dev"
-                                class="form-control"
-                                value="Freelancer & Project Builder"
-                            >
-                        </div>
-
-                        <div class="form-group">
-                            <label for="reg-currency" class="form-label">
-                                <i class="fa-solid fa-dollar-sign"></i> Currency
-                            </label>
-                            <select id="reg-currency" name="currency" class="form-control">
-                                <option value="$" selected>USD ($)</option>
-                                <option value="€">EUR (€)</option>
-                                <option value="£">GBP (£)</option>
-                                <option value="₹">INR (₹)</option>
-                                <option value="CAD $">CAD ($)</option>
-                                <option value="AUD $">AUD ($)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reg-password" class="form-label">
-                            <i class="fa-solid fa-lock"></i> Password *
-                        </label>
-                        <div class="password-input-wrapper">
-                            <input 
-                                type="password" 
-                                id="reg-password" 
-                                name="password" 
-                                required 
-                                minlength="6"
-                                placeholder="Create a strong password (min 6 chars)"
-                                class="form-control"
-                            >
-                            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('reg-password', this)">
-                                <i class="fa-regular fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary-auth">
-                        <span>Create Free Account</span>
-                        <i class="fa-solid fa-rocket"></i>
-                    </button>
-                </form>
-
-                <div class="auth-switch-prompt">
-                    <span id="prompt-text">Don't have an account yet?</span>
-                    <a href="javascript:void(0)" id="prompt-link" onclick="switchAuthTab('register')">Create an account</a>
-                </div>
-            </div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-chip-icon f"><i class="fa-solid fa-laptop-code"></i></div>
+        <div>
+          <div class="stat-chip-val">$11,250</div>
+          <div class="stat-chip-lbl">Freelance Revenue</div>
+          <div class="stat-chip-up"><i class="fa-solid fa-arrow-trend-up"></i> +12% this month</div>
         </div>
+      </div>
     </div>
+
+    <div class="brand-features">
+      <div class="feat-row"><i class="fa-solid fa-check-circle"></i> Project milestones vs hourly freelance tracking</div>
+      <div class="feat-row"><i class="fa-solid fa-check-circle"></i> Multi-platform: Upwork, Fiverr, Toptal, Direct clients</div>
+      <div class="feat-row"><i class="fa-solid fa-check-circle"></i> Client Pitch CRM — call tracking, proposals, deal status</div>
+      <div class="feat-row"><i class="fa-solid fa-check-circle"></i> One-click export to CSV with live analytics charts</div>
+    </div>
+
+    <div class="auth-security-note">
+      <i class="fa-solid fa-shield-halved"></i> Secure session auth · Data stored locally on your machine
+    </div>
+  </div>
+
+  <!-- ── RIGHT AUTH FORM ── -->
+  <div class="auth-right">
+    <div class="auth-card">
+
+      <!-- Logo -->
+      <div class="logo-mark">
+        <div class="logo-box"><i class="fa-solid fa-wallet"></i></div>
+        <div class="logo-text">Earn<span>Flow</span></div>
+      </div>
+
+      <h2 class="auth-h2" id="auth-h2">Welcome back</h2>
+      <p class="auth-sub" id="auth-sub">Sign in to continue to your dashboard.</p>
+
+      <!-- Demo Banner -->
+      <div class="demo-banner" onclick="fillDemo()">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="demo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+          <div>
+            <div class="demo-lbl">Quick Demo Login</div>
+            <div class="demo-hint">Auto-fill credentials with sample data</div>
+          </div>
+        </div>
+        <span class="demo-fill-btn">Click to Fill</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-in"  onclick="switchTab('login')"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In</button>
+        <button class="auth-tab"        id="tab-up"  onclick="switchTab('register')"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="form-login" class="auth-form" method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-envelope"></i> Email Address</label>
+          <div class="input-icon-wrap">
+            <i class="icon fa-regular fa-envelope"></i>
+            <input type="email" name="email" id="login-email" required placeholder="you@domain.com" autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="label-row">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Password</label>
+            <a href="#" class="link-sm" onclick="alert('Demo password: demo123')">Forgot password?</a>
+          </div>
+          <div class="pwd-wrap">
+            <input type="password" name="password" id="login-pass" required placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pwd-toggle" onclick="togglePwd('login-pass',this)"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+          Sign In to Dashboard <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="form-register" class="auth-form hidden" method="POST" action="{{ url_for('register') }}">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-regular fa-user"></i> Full Name *</label>
+            <input type="text" name="full_name" required placeholder="e.g. Alex Rivera">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-briefcase"></i> Role / Title</label>
+            <input type="text" name="title" placeholder="Freelance Dev & Designer" value="Freelance Developer">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fa-regular fa-envelope"></i> Email Address *</label>
+          <input type="email" name="email" required placeholder="alex@domain.com" autocomplete="email">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-dollar-sign"></i> Currency</label>
+            <select name="currency">
+              <option value="$" selected>USD ($)</option>
+              <option value="€">EUR (€)</option>
+              <option value="£">GBP (£)</option>
+              <option value="₹">INR (₹)</option>
+              <option value="CAD $">CAD ($)</option>
+              <option value="AUD $">AUD ($)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-lock"></i> Password *</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" required minlength="6" placeholder="Min 6 characters">
+              <button type="button" class="pwd-toggle" onclick="togglePwd(this.previousElementSibling.id||'',this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+          Create Account <i class="fa-solid fa-rocket"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer" id="auth-footer">
+        Don't have an account? <a href="#" onclick="switchTab('register')">Create one free</a>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function switchAuthTab(target) {
-    const tabLogin = document.getElementById('tab-login');
-    const tabRegister = document.getElementById('tab-register');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const heading = document.getElementById('auth-heading');
-    const subheading = document.getElementById('auth-subheading');
-    const promptText = document.getElementById('prompt-text');
-    const promptLink = document.getElementById('prompt-link');
-
-    if (target === 'login') {
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-        heading.textContent = 'Welcome Back';
-        subheading.textContent = 'Sign in to review your earnings and client projects.';
-        promptText.textContent = "Don't have an account yet?";
-        promptLink.textContent = "Create an account";
-        promptLink.setAttribute('onclick', "switchAuthTab('register')");
-    } else {
-        tabRegister.classList.add('active');
-        tabLogin.classList.remove('active');
-        registerForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-        heading.textContent = 'Get Started Today';
-        subheading.textContent = 'Track all your project and freelance revenues with ease.';
-        promptText.textContent = "Already have an account?";
-        promptLink.textContent = "Sign in here";
-        promptLink.setAttribute('onclick', "switchAuthTab('login')");
-    }
+function switchTab(t) {
+  const isLogin = t === 'login';
+  document.getElementById('tab-in').classList.toggle('active', isLogin);
+  document.getElementById('tab-up').classList.toggle('active', !isLogin);
+  document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('form-register').classList.toggle('hidden', isLogin);
+  document.getElementById('auth-h2').textContent  = isLogin ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent  = isLogin ? 'Sign in to continue to your dashboard.' : 'Start tracking your freelance earnings today.';
+  document.getElementById('auth-footer').innerHTML = isLogin
+    ? 'Don\'t have an account? <a href="#" onclick="switchTab(\'register\')">Create one free</a>'
+    : 'Already have an account? <a href="#" onclick="switchTab(\'login\')">Sign in</a>';
 }
 
-function fillDemoCredentials() {
-    switchAuthTab('login');
-    document.getElementById('login-email').value = 'demo@freelance.io';
-    document.getElementById('login-password').value = 'demo123';
-    
-    // Brief visual flash to show it's filled
-    const card = document.querySelector('.auth-card');
-    card.classList.add('pulse-highlight');
-    setTimeout(() => card.classList.remove('pulse-highlight'), 600);
+function fillDemo() {
+  switchTab('login');
+  document.getElementById('login-email').value = 'demo@freelance.io';
+  document.getElementById('login-pass').value  = 'demo123';
+  showToast('Demo credentials filled! Click "Sign In" to continue.', 'info');
 }
 
-function togglePasswordVisibility(fieldId, btn) {
-    const field = document.getElementById(fieldId);
-    const icon = btn.querySelector('i');
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        field.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
+function togglePwd(fieldId, btn) {
+  // Support passing field ID string OR finding the sibling
+  let field = fieldId ? document.getElementById(fieldId) : null;
+  if (!field) { field = btn.previousElementSibling; }
+  if (!field) return;
+  const icon = btn.querySelector('i');
+  if (field.type === 'password') {
+    field.type = 'text'; icon.className = 'fa-regular fa-eye-slash';
+  } else {
+    field.type = 'password'; icon.className = 'fa-regular fa-eye';
+  }
 }
 </script>
 {% endblock %}
